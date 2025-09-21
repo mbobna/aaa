@@ -11,10 +11,9 @@ export default function AdminPanel({ meta }) {
 
   return (
     <div className="card admin">
-      # <h2>Admin</h2>
-      # <p>Št. slik: <strong>{meta.images}</strong></p>
-      # <p>Čas do izbrisa: <strong>{formatTime(meta.time_left_seconds)}</strong></p>
-      # <p>QR odjemalci vidijo galerijo na /gallery</p>
+      <h2>Admin</h2>
+      <p>Št. slik: <strong>{meta.images}</strong></p>
+      <p>Čas do izbrisa: <strong>{formatTime(meta.time_left_seconds)}</strong></p>
     </div>
   )
 }
