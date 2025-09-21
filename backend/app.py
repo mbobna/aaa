@@ -1,9 +1,8 @@
 import os
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from models import db, Image, Meta
-from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
@@ -18,7 +17,7 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET')
 )
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, "frontend/build"))
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -30,7 +29,8 @@ with app.app_context():
         db.session.add(Meta(id=1, expire_at=None))
         db.session.commit()
 
-# --- API ---
+# --- API ENDPOINTI ---
+
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -49,7 +49,7 @@ def upload():
 
     meta = Meta.query.get(1)
     if meta.expire_at is None:
-        meta.expire_at = datetime.utcnow() + timedelta(hours=72)
+        meta.expire_at = datetime.utcnow() + timedelta(hours=48)
         db.session.add(meta)
 
     db.session.commit()
@@ -73,6 +73,16 @@ def delete_image(image_id):
     db.session.commit()
     return jsonify({'msg': 'deleted'})
 
-if __name__ == '__main__':
+# --- SERVIRANJE REACT FRONTEND-A ---
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_react(path):
+    if path != "" and os.path.exists(os.path.join(BASE_DIR, "frontend/build", path)):
+        return send_from_directory(os.path.join(BASE_DIR, "frontend/build"), path)
+    else:
+        return send_from_directory(os.path.join(BASE_DIR, "frontend/build"), "index.html")
+
+# --- ZAGON APLIKACIJE ---
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
