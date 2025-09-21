@@ -1,0 +1,75 @@
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 150px; /* širina slike v galeriji */
+  text-align: center;
+}
+
+.thumb img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover; /* slika ne bo deformirana */
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+.overlay img.enlarged {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+}
+
+body {
+    background-color: aqua;
+    background-size: cover;
+    background-repeat: no-repeat;
+
+}
+
+/* Normalen tok strani */
+body {
+  margin: 0;
+  padding: 20px;
+  background: rgb(0, 200, 250);
+  font-family: sans-serif;
+}
+
+.container {
+  text-align: center;
+}
+
+.container h1 {
+  margin: 20px 0 40px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Kartica na sredino po širini */
+.card {
+  background-color: rgba(0, 225, 255, 0.719);
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-width: 500px;
+  margin: 0 auto; /* centrirano horizontalno */
+}

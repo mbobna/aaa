@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.env
+venv/
+env/
+*.sqlite3
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# OS datoteke
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE / editor
+.vscode/
+*.sublime-workspace
+*.sublime-project
+.idea/
