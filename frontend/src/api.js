@@ -1,5 +1,5 @@
 import axios from 'axios'
-const API = 'http://127.0.0.1:5000'
+const API = 'https://aaa-w5fb.onrender.com'
 
 export const uploadImage = (file) => {
   const formData = new FormData()
