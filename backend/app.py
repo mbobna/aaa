@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 
-# Load .env
+# --- Load .env ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
@@ -17,8 +17,11 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET')
 )
 
-app = Flask(__name__, static_folder=os.path.join(BASE_DIR, "frontend/build"))
+# --- Flask setup ---
+# Nastavimo static_folder na build React frontenda
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, '../frontend/dist'), static_url_path='/')
 CORS(app)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
@@ -29,8 +32,7 @@ with app.app_context():
         db.session.add(Meta(id=1, expire_at=None))
         db.session.commit()
 
-# --- API ENDPOINTI ---
-
+# --- Backend API ---
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -49,7 +51,7 @@ def upload():
 
     meta = Meta.query.get(1)
     if meta.expire_at is None:
-        meta.expire_at = datetime.utcnow() + timedelta(hours=48)
+        meta.expire_at = datetime.utcnow() + timedelta(hours=48)  # ali spremeniš na 96 h
         db.session.add(meta)
 
     db.session.commit()
@@ -73,16 +75,17 @@ def delete_image(image_id):
     db.session.commit()
     return jsonify({'msg': 'deleted'})
 
-# --- SERVIRANJE REACT FRONTEND-A ---
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
+# --- Serve React frontend ---
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
 def serve_react(path):
-    if path != "" and os.path.exists(os.path.join(BASE_DIR, "frontend/build", path)):
-        return send_from_directory(os.path.join(BASE_DIR, "frontend/build"), path)
+    """Servira frontend build za vse poti, da React Router deluje"""
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
     else:
-        return send_from_directory(os.path.join(BASE_DIR, "frontend/build"), "index.html")
+        return send_from_directory(app.static_folder, 'index.html')
 
-# --- ZAGON APLIKACIJE ---
-if __name__ == "__main__":
+# --- Run app ---
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
