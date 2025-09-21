@@ -40,10 +40,12 @@ export default function Gallery({ onChange }) {
   return (
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
+      {/*
       <div className="qr">
         <QRCodeCanvas value={link} size={140} />
         <p>{link}</p>
       </div>
+      */}
 
       <div>
         <input type="file" onChange={handleUpload} />
