@@ -10,10 +10,14 @@ export default function AdminPanel({ meta }) {
   }
 
   return (
+    
     <div className="card admin">
-      <h2>Admin</h2>
+      <h2>Hvala za deljenje skupnih trenutkov!</h2>
+      {/*
       <p>Št. slik: <strong>{meta.images}</strong></p>
       <p>Čas do izbrisa: <strong>{formatTime(meta.time_left_seconds)}</strong></p>
+      */}
     </div>
+    
   )
 }
