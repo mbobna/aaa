@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getImages, uploadImage, deleteImage } from '../api'
-// import { QRCodeCanvas } from 'qrcode.react' // trenutno ne rabiš
+import { QRCodeCanvas } from 'qrcode.react'
 
 export default function Gallery({ onChange }) {
   const [images, setImages] = useState([])
@@ -22,22 +22,12 @@ export default function Gallery({ onChange }) {
     const f = e.target.files[0]
     if (!f) return
 
-    // Preveri, če je datoteka res slika
-    if (!f.type.startsWith('image/')) {
-      alert("Prosim izberi sliko!")
-      e.target.value = null
-      return
-    }
-
     try {
       await uploadImage(f)
       await load()
       onChange && onChange()
     } catch (err) {
       console.error(err)
-    } finally {
-      // Ponastavi input, da se enaka datoteka lahko ponovno izbere
-      e.target.value = null
     }
   }
 
@@ -51,7 +41,7 @@ export default function Gallery({ onChange }) {
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
       <h2>Nastjina 40-ka!</h2>
-      {/* 
+      {/*
       <div className="qr">
         <QRCodeCanvas value={link} size={140} />
         <p>{link}</p>
@@ -59,7 +49,7 @@ export default function Gallery({ onChange }) {
       */}
 
       <div>
-        <input type="file" accept="image/*" onChange={handleUpload} />
+        <input type="file" onChange={handleUpload} />
       </div>
 
       <div className="gallery">
