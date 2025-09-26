@@ -18,9 +18,15 @@ cloudinary.config(
 )
 
 # --- Flask setup ---
-# Nastavimo static_folder na build React frontenda
-app = Flask(__name__, static_folder=os.path.join(BASE_DIR, '../frontend/dist'), static_url_path='/')
+app = Flask(
+    __name__,
+    static_folder=os.path.join(BASE_DIR, '../frontend/dist'),
+    static_url_path='/'
+)
 CORS(app)
+
+# omejitev velikosti datotek (npr. 20 MB)
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -51,7 +57,7 @@ def upload():
 
     meta = Meta.query.get(1)
     if meta.expire_at is None:
-        meta.expire_at = datetime.utcnow() + timedelta(hours=48)  # ali spremeniš na 96 h
+        meta.expire_at = datetime.utcnow() + timedelta(hours=96)  # 96 ur
         db.session.add(meta)
 
     db.session.commit()
@@ -79,7 +85,6 @@ def delete_image(image_id):
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react(path):
-    """Servira frontend build za vse poti, da React Router deluje"""
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     else:
