@@ -40,7 +40,7 @@ export default function Gallery({ onChange }) {
   return (
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
-      <h2>Nastjina 40-ka!</h2>
+      <h2>Moj rojstni dan</h2>
       {/*
       <div className="qr">
         <QRCodeCanvas value={link} size={140} />
