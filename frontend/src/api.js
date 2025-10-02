@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // uporabi vedno HTTPS, ker Render uporablja SSL
-const API = 'https://aaa-w5fb.onrender.com'
+const API = 'https://foto-koticek-x9ew.onrender.com'
 
 export const uploadImage = (file) => {
   const formData = new FormData()
