@@ -68,7 +68,7 @@ export default function Gallery({ onChange }) {
   return (
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
-      <h2>Moj rojstni dan</h2>
+      <h2> </h2>
 
       {/* Zakomentiran QR del */}
       {/*
