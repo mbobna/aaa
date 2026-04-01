@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 
-# --- Load environment variables (Render jih že bere) ---
+# --- Load environment variables ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
@@ -67,26 +67,30 @@ def admin_delete(image_id):
     token = request.headers.get("Admin-Token")
     if token != ADMIN_PASSWORD:
         return jsonify({'error': 'Unauthorized'}), 401
+
     img = Image.query.get(image_id)
     if not img:
         return jsonify({'error': 'not found'}), 404
+
     try:
         cloudinary.uploader.destroy(img.public_id)
     except Exception as e:
         return jsonify({'error': 'Cloudinary delete failed', 'detail': str(e)}), 500
+
     db.session.delete(img)
     db.session.commit()
     return jsonify({'msg': 'deleted'})
+
+# --- Disable normal delete endpoint ---
+@app.route('/delete/<int:image_id>', methods=['DELETE'])
+def delete_image(image_id):
+    return jsonify({'error': 'Use admin delete'}), 403
 
 # --- Public endpoints ---
 @app.route('/images')
 def images():
     imgs = Image.query.order_by(Image.uploaded_at.desc()).all()
     return jsonify([{'id': i.id, 'public_id': i.public_id, 'url': i.url} for i in imgs])
-
-@app.route('/delete/<int:image_id>', methods=['DELETE'])
-def delete_image(image_id):
-    return jsonify({'error': 'Use admin delete'}), 403
 
 # --- Serve React frontend ---
 @app.route('/', defaults={'path': ''})
