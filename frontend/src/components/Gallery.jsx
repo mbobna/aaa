@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { getImages, uploadImage, deleteImage } from '../api'
-import { QRCodeCanvas } from 'qrcode.react'
 
-export default function Gallery({ onChange }) {
+export default function Gallery({ onChange, isAdmin }) {
   const [images, setImages] = useState([])
-  const [selectedImg, setSelectedImg] = useState(null) // nova state za izbrano sliko
-  const link = `${window.location.origin}/gallery`
+  const [selectedImg, setSelectedImg] = useState(null)
 
   const load = async () => {
     try {
@@ -18,7 +16,6 @@ export default function Gallery({ onChange }) {
 
   useEffect(() => { load() }, [])
 
-  // Funkcija za resize slike pred uploadom (za mobilne naprave)
   const resizeImage = (file, maxWidth = 1024, maxHeight = 1024) => {
     return new Promise((resolve) => {
       const img = new Image()
@@ -60,23 +57,19 @@ export default function Gallery({ onChange }) {
   }
 
   const handleDelete = async (id) => {
-    await deleteImage(id)
-    await load()
-    onChange && onChange()
+    if (!window.confirm("Ali res želiš izbrisati to sliko?")) return
+    try {
+      await deleteImage(id)
+      await load()
+      onChange && onChange()
+    } catch (err) {
+      alert("Napaka pri brisanju slike")
+    }
   }
 
   return (
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
-      <h2> </h2>
-
-      {/* Zakomentiran QR del */}
-      {/*
-      <div className="qr">
-        <QRCodeCanvas value={link} size={140} />
-        <p>{link}</p>
-      </div>
-      */}
 
       <div>
         <input type="file" onChange={handleUpload} />
@@ -89,19 +82,22 @@ export default function Gallery({ onChange }) {
             <img 
               src={img.url} 
               alt="uploaded" 
-              onClick={() => setSelectedImg(img.url)} // ob kliku se slika poveča
+              onClick={() => setSelectedImg(img.url)}
               style={{ maxWidth: '100%', height: 'auto', cursor: 'pointer' }}
             />
-            <button className="btn-danger" onClick={() => handleDelete(img.id)}>Izbriši</button>
+            {isAdmin && (
+              <button className="btn-danger" onClick={() => handleDelete(img.id)}>
+                Izbriši
+              </button>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Overlay za povečano sliko */}
       {selectedImg && (
         <div 
           className="overlay" 
-          onClick={() => setSelectedImg(null)} // klik na overlay zapre sliko
+          onClick={() => setSelectedImg(null)}
           style={{
             position: 'fixed',
             top: 0, left: 0,
