@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 
-# --- Load .env ---
+# --- Load environment variables (Render jih že bere) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
@@ -17,6 +17,8 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET')
 )
 
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+
 # --- Flask setup ---
 app = Flask(
     __name__,
@@ -25,10 +27,7 @@ app = Flask(
 )
 CORS(app)
 
-# omejitev velikosti datotek (npr. 20 MB)
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  
-
-# Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
@@ -39,8 +38,7 @@ with app.app_context():
         db.session.add(Meta(id=1, expire_at=None))
         db.session.commit()
 
-# --- Backend API ---
-
+# --- Upload endpoint ---
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -48,54 +46,47 @@ def upload():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'no selected file'}), 400
-
     try:
-        # upload na Cloudinary
         res = cloudinary.uploader.upload(file, folder='single_user_gallery')
-
-        # optimiziran URL za frontend
-        optimized_url = res['secure_url'].replace(
-            '/upload/',
-            '/upload/w_800,q_auto,f_auto/'
-        )
-
-        # shrani v bazo
+        optimized_url = res['secure_url'].replace('/upload/', '/upload/w_800,q_auto,f_auto/')
         img = Image(public_id=res['public_id'], url=optimized_url)
         db.session.add(img)
 
-        # nastavi expire
         meta = Meta.query.get(1)
         if meta.expire_at is None:
             meta.expire_at = datetime.utcnow() + timedelta(hours=96)
             db.session.add(meta)
-
         db.session.commit()
-
         return jsonify({'msg': 'uploaded', 'public_id': res['public_id'], 'url': optimized_url})
-
     except Exception as e:
         return jsonify({'error': 'upload failed', 'detail': str(e)}), 500
 
-
-@app.route('/images')
-def images():
-    imgs = Image.query.order_by(Image.uploaded_at.desc()).all()
-    return jsonify([{'id': i.id, 'public_id': i.public_id, 'url': i.url} for i in imgs])
-
-
-@app.route('/delete/<int:image_id>', methods=['DELETE'])
-def delete_image(image_id):
+# --- Admin delete endpoint ---
+@app.route('/admin/delete/<int:image_id>', methods=['DELETE'])
+def admin_delete(image_id):
+    token = request.headers.get("Admin-Token")
+    if token != ADMIN_PASSWORD:
+        return jsonify({'error': 'Unauthorized'}), 401
     img = Image.query.get(image_id)
     if not img:
         return jsonify({'error': 'not found'}), 404
     try:
         cloudinary.uploader.destroy(img.public_id)
-    except:
-        pass
+    except Exception as e:
+        return jsonify({'error': 'Cloudinary delete failed', 'detail': str(e)}), 500
     db.session.delete(img)
     db.session.commit()
     return jsonify({'msg': 'deleted'})
 
+# --- Public endpoints ---
+@app.route('/images')
+def images():
+    imgs = Image.query.order_by(Image.uploaded_at.desc()).all()
+    return jsonify([{'id': i.id, 'public_id': i.public_id, 'url': i.url} for i in imgs])
+
+@app.route('/delete/<int:image_id>', methods=['DELETE'])
+def delete_image(image_id):
+    return jsonify({'error': 'Use admin delete'}), 403
 
 # --- Serve React frontend ---
 @app.route('/', defaults={'path': ''})
@@ -105,7 +96,6 @@ def serve_react(path):
         return send_from_directory(app.static_folder, path)
     else:
         return send_from_directory(app.static_folder, 'index.html')
-
 
 # --- Run app ---
 if __name__ == '__main__':
