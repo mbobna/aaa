@@ -37,7 +37,7 @@ export default function App() {
   // --- Funkcija za admin login ---
   const adminLogin = () => {
     const password = prompt("Vnesi admin geslo:")
-    if (password === "rojstni-dan-2026") { // nastavi svoje geslo
+    if (password === "mitja") { // nastavi svoje geslo
       setIsAdmin(true)
       setAdminToken(password)
       alert("Admin dostop omogočen!")
