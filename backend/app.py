@@ -28,6 +28,7 @@ CORS(app)
 # omejitev velikosti datotek (npr. 20 MB)
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024  
 
+# Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
@@ -39,6 +40,7 @@ with app.app_context():
         db.session.commit()
 
 # --- Backend API ---
+
 @app.route('/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -48,25 +50,38 @@ def upload():
         return jsonify({'error': 'no selected file'}), 400
 
     try:
+        # upload na Cloudinary
         res = cloudinary.uploader.upload(file, folder='single_user_gallery')
+
+        # optimiziran URL za frontend
+        optimized_url = res['secure_url'].replace(
+            '/upload/',
+            '/upload/w_800,q_auto,f_auto/'
+        )
+
+        # shrani v bazo
+        img = Image(public_id=res['public_id'], url=optimized_url)
+        db.session.add(img)
+
+        # nastavi expire
+        meta = Meta.query.get(1)
+        if meta.expire_at is None:
+            meta.expire_at = datetime.utcnow() + timedelta(hours=96)
+            db.session.add(meta)
+
+        db.session.commit()
+
+        return jsonify({'msg': 'uploaded', 'public_id': res['public_id'], 'url': optimized_url})
+
     except Exception as e:
         return jsonify({'error': 'upload failed', 'detail': str(e)}), 500
 
-    img = Image(public_id=res['public_id'], url=res['secure_url'])
-    db.session.add(img)
-
-    meta = Meta.query.get(1)
-    if meta.expire_at is None:
-        meta.expire_at = datetime.utcnow() + timedelta(hours=96)  # 96 ur
-        db.session.add(meta)
-
-    db.session.commit()
-    return jsonify({'msg': 'uploaded', 'public_id': res['public_id'], 'url': res['secure_url']})
 
 @app.route('/images')
 def images():
     imgs = Image.query.order_by(Image.uploaded_at.desc()).all()
     return jsonify([{'id': i.id, 'public_id': i.public_id, 'url': i.url} for i in imgs])
+
 
 @app.route('/delete/<int:image_id>', methods=['DELETE'])
 def delete_image(image_id):
@@ -81,6 +96,7 @@ def delete_image(image_id):
     db.session.commit()
     return jsonify({'msg': 'deleted'})
 
+
 # --- Serve React frontend ---
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -89,6 +105,7 @@ def serve_react(path):
         return send_from_directory(app.static_folder, path)
     else:
         return send_from_directory(app.static_folder, 'index.html')
+
 
 # --- Run app ---
 if __name__ == '__main__':
