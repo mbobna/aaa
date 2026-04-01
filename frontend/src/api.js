@@ -1,9 +1,6 @@
 import axios from 'axios'
 
-const API = 'https://foto-koticek-x9ew.onrender.com' // tvoj Render URL
-
-let adminToken = null
-export const setAdminToken = (token) => { adminToken = token }
+const API = 'https://foto-koticek-x9ew.onrender.com'
 
 export const uploadImage = (file) => {
   const formData = new FormData()
@@ -15,11 +12,10 @@ export const uploadImage = (file) => {
 
 export const getImages = () => axios.get(`${API}/images`)
 
-export const deleteImage = (id) => {
-  if (!adminToken) return Promise.reject(new Error('Niste prijavljeni kot admin'))
-  return axios.delete(`${API}/admin/delete/${id}`, {
+// admin delete zahteva token
+export const deleteImage = (id, adminToken) =>
+  axios.delete(`${API}/admin/delete/${id}`, {
     headers: { 'Admin-Token': adminToken }
   })
-}
 
 export const getMeta = () => axios.get(`${API}/meta`)
