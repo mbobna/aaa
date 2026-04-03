@@ -73,3 +73,31 @@ body {
   max-width: 500px;
   margin: 0 auto; /* centrirano horizontalno */
 }
+
+.btn-danger {
+  background-color: #e74c3c; /* rdeča */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b; /* temnejša rdeča ob hover */
+}
+
+.btn-upload {
+  background-color: #3498db; /* modra */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-upload:hover {
+  background-color: #2980b9; /* temnejša modra */
+}
