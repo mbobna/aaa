@@ -37,7 +37,7 @@ export default function App() {
     <div className="container">
       <h1>Skupaj ustvarjamo spomine.</h1>
       {!isAdmin && (
-        <button onClick={handleAdminLogin}>Prijava kot admin</button>
+        <button className="btn-upload" onClick={handleAdminLogin}>Prijava kot admin</button>
       )}
       <Gallery onChange={loadMeta} isAdmin={isAdmin} adminToken={adminToken} />
       <AdminPanel meta={meta} />
