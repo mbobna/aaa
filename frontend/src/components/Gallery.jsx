@@ -17,8 +17,8 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
 
   useEffect(() => { load() }, [])
 
-  // 🔥 OPTIMIZIRAN RESIZE
-  const resizeImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.8) => {
+  // 🔥 Resize + kompresija slike
+  const resizeImage = (file, maxWidth = 1024, maxHeight = 1024, quality = 0.85) => {
     return new Promise((resolve) => {
       const img = new Image()
       const url = URL.createObjectURL(file)
@@ -27,7 +27,7 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
         let width = img.width
         let height = img.height
 
-        // ✅ če je slika že majhna → ne resize-aj (zelo pospeši)
+        // Če je slika že majhna → ne resize-aj
         if (width <= maxWidth && height <= maxHeight) {
           resolve(file)
           return
@@ -94,7 +94,6 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
 
       <input type="file" onChange={handleUpload} />
 
-      {/* 🔥 indikator nalaganja */}
       {uploading && <p>Nalaganje slike...</p>}
 
       <div className="gallery">
