@@ -92,7 +92,7 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
 
-      <input type="file" className="btn-upload" onChange={handleUpload} />
+      <input type="file" className="btn-danger" onChange={handleUpload} />
 
       {uploading && <p>Nalaganje slike...</p>}
 
