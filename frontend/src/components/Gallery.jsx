@@ -4,6 +4,7 @@ import { getImages, uploadImage, deleteImage } from '../api'
 export default function Gallery({ onChange, isAdmin, adminToken }) {
   const [images, setImages] = useState([])
   const [selectedImg, setSelectedImg] = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   const load = async () => {
     try {
@@ -16,15 +17,67 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
 
   useEffect(() => { load() }, [])
 
+  // 🔥 OPTIMIZIRAN RESIZE
+  const resizeImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+
+        // ✅ če je slika že majhna → ne resize-aj (zelo pospeši)
+        if (width <= maxWidth && height <= maxHeight) {
+          resolve(file)
+          return
+        }
+
+        const canvas = document.createElement('canvas')
+
+        if (width > height) {
+          height *= maxWidth / width
+          width = maxWidth
+        } else {
+          width *= maxHeight / height
+          height = maxHeight
+        }
+
+        canvas.width = width
+        canvas.height = height
+
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(
+          (blob) => {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }))
+          },
+          'image/jpeg',
+          quality
+        )
+      }
+
+      img.src = url
+    })
+  }
+
   const handleUpload = async (e) => {
     const f = e.target.files[0]
     if (!f) return
+
     try {
-      await uploadImage(f)
+      setUploading(true)
+
+      const resizedFile = await resizeImage(f)
+      await uploadImage(resizedFile)
+
       await load()
       onChange && onChange()
     } catch (err) {
       console.error(err)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -38,7 +91,11 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
   return (
     <div className="card">
       <h2>FOTO KOTIČEK</h2>
+
       <input type="file" onChange={handleUpload} />
+
+      {/* 🔥 indikator nalaganja */}
+      {uploading && <p>Nalaganje slike...</p>}
 
       <div className="gallery">
         {images.length === 0 && <p>Ni naloženih slik.</p>}
@@ -47,9 +104,11 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
             <img
               src={img.url}
               alt="uploaded"
+              loading="lazy"
               onClick={() => setSelectedImg(img.url)}
               style={{ maxWidth: '100%', height: 'auto', cursor: 'pointer' }}
             />
+
             {isAdmin && (
               <button className="btn-danger" onClick={() => handleDelete(img.id)}>
                 Izbriši
@@ -61,7 +120,11 @@ export default function Gallery({ onChange, isAdmin, adminToken }) {
 
       {selectedImg && (
         <div className="overlay" onClick={() => setSelectedImg(null)}>
-          <img src={selectedImg} alt="Povečana slika" style={{ maxWidth: '95%', maxHeight: '95%' }} />
+          <img
+            src={selectedImg}
+            alt="Povečana slika"
+            style={{ maxWidth: '95%', maxHeight: '95%' }}
+          />
         </div>
       )}
     </div>
